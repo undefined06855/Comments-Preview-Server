@@ -43,14 +43,19 @@ function boomlingsToSQL(id, boomlings) {
         userData[parseInt(userSplit[i])] = userSplit[i + 1];
     }
 
-    console.log(commentSplit);
-    console.log("yeah");
-    console.log(commentData[2]);
-    console.log("yeah");
+    try {
+        atob(commentData[2].replaceAll("-", "+").replaceAll("_", "/"))
+    } catch(err) {
+        console.log(commentData);
+        console.log(comment);
+        console.log(boomlings);
+        console.log(id);
+        throw err;
+    }
 
     return {
         id,
-        comment: atob(commentData[2]),
+        comment: atob(commentData[2].replaceAll("-", "+").replaceAll("_", "/")),
         likes: parseInt(commentData[4]),
         player_name: userData[1],
         icon_main_color: parseInt(userData[10]),
@@ -121,7 +126,11 @@ Bun.serve({
                         }
                     );
 
-                    let boomlingsComments = (await res.text()).split("|");
+                    let rawText = await res.text();
+                    if (rawText == "-1") continue;
+                    if (rawText.length < 8) continue;
+
+                    let boomlingsComments = rawText.split("|");
                     gdComments.push(...boomlingsComments.map(boom => boomlingsToSQL(id, boom)));
                 }
 
