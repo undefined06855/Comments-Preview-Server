@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS LevelComments (
     player_name             TEXT NOT NULL,
     icon_main_color         INTEGER NOT NULL,
     icon_secondary_color    INTEGER NOT NULL,
-    icon_glow_color    INTEGER NOT NULL,
+    icon_glow_color         INTEGER NOT NULL,
     icon_frame              INTEGER NOT NULL,
     icon_type               INTEGER NOT NULL,
 
