@@ -82,7 +82,8 @@ let server = Bun.serve({
         "/v1/comments": async req => {
             return new Response(JSON.stringify(await (async () => {
                 let ip = server.requestIP(req);
-                if (!limiter.check("/comments", ip.address)) {
+                let res = limiter.check("/comments", ip.address);
+                if (res.limited) {
                     return { error: "You are being rate limited!" };
                 }
 
