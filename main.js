@@ -1,4 +1,5 @@
 import { Database } from "bun:sqlite"
+import { RateLimiter } from "@rabbit-company/rate-limiter";
 
 const db = new Database("levels.sqlite", { create: true });
 db.run(`
@@ -18,6 +19,13 @@ CREATE TABLE IF NOT EXISTS LevelComments (
     updated_at              INTEGER NOT NULL
 )
 `);
+
+// 4 requests per 5 seconds
+const limiter = new RateLimiter({
+    window: 5000,
+    max: 4,
+    enableCleanup: false
+});
 
 /**
  * https://boomlings.dev/resources/server/comment
@@ -67,12 +75,17 @@ function boomlingsToSQL(id, boomlings) {
     }
 }
 
-Bun.serve({
+let server = Bun.serve({
     routes: {
         "/": Response.redirect("https://github.com/undefined06855/Comments-Preview-Server"),
 
         "/v1/comments": async req => {
             return new Response(JSON.stringify(await (async () => {
+                let ip = server.requestIP(req);
+                if (!limiter.check("/comments", ip.address)) {
+                    return { error: "You are being rate limited!" };
+                }
+
                 let url = new URL(req.url);
                 if (!url.searchParams.has("levelIDs")) {
                     return { error: "URL parameters must include `levelIDs` param!" };
