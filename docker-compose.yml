@@ -1,7 +1,6 @@
 services:
   comments-preview-server:
     image: oven/bun:latest
-    container_name: Comments Preview Server
     restart: always
     working_dir: /app
 
@@ -13,6 +12,6 @@ services:
       - "${PORT}:${PORT}"
 
     volumes:
-      - ./levels.sqlite:/app/levels.sqlite
+      - .:/app
 
     command: [ "sh", "-c", "bun install && bun run main.js" ]

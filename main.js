@@ -1,6 +1,6 @@
 import { Database } from "bun:sqlite"
 
-const db = new Database("levels.sqlite");
+const db = new Database("levels.sqlite", { create: true });
 db.run(`
 CREATE TABLE IF NOT EXISTS LevelComments (
     id                      INTEGER,
