@@ -8,6 +8,8 @@ This requires the following environment variables (set either through a `.env` f
 ```
 PORT=8080
 DEVELOPMENT=true
+BOOMLINGS_ENDPOINT=https://www.boomlings.com
+BOOMLINGS_AUTH=whatever # optional
 ```
 
 This project was created using `bun init` in bun v1.3.12. [Bun](https://bun.com) is a fast all-in-one JavaScript runtime.

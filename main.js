@@ -132,9 +132,13 @@ let server = Bun.serve({
                     params.append("mode", "1"); // most liked
                     params.append("count", "5");
 
+                    let headers = {};
+                    headers["User-Agent"] = "";
+                    headers["Authorization"] = process.env.BOOMLINGS_AUTH;
+
                     let res = await fetch(
-                        "https://www.boomlings.com/database/getGJComments21.php", {
-                            headers: { "User-Agent": " " },
+                        `${process.env.BOOMLINGS_ENDPOINT}/database/getGJComments21.php`, {
+                            headers,
                             body: params,
                             method: "POST"
                         }
