@@ -137,7 +137,7 @@ let server = Bun.serve({
                     headers["Authorization"] = process.env.BOOMLINGS_AUTH;
 
                     let res = await fetch(
-                        `${process.env.BOOMLINGS_ENDPOINT}/database/getGJComments21.php`, {
+                        process.env.BOOMLINGS_ENDPOINT, {
                             headers,
                             body: params,
                             method: "POST"
