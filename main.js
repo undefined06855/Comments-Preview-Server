@@ -1,7 +1,7 @@
 import { Database } from "bun:sqlite"
 import { RateLimiter } from "@rabbit-company/rate-limiter";
 
-const db = new Database("levels.sqlite", { create: true });
+const db = new Database(":memory:", { create: true });
 db.run(`
 CREATE TABLE IF NOT EXISTS LevelComments (
     id                      INTEGER,
@@ -134,10 +134,10 @@ let server = Bun.serve({
 
                     let headers = {};
                     headers["User-Agent"] = "";
-                    headers["Authorization"] = process.env.BOOMLINGS_AUTH;
+                    headers["Authorization"] = process.env.BOOMLINGS_AUTH ?? "";
 
                     let res = await fetch(
-                        process.env.BOOMLINGS_ENDPOINT, {
+                        process.env.BOOMLINGS_ENDPOINT ?? "https://www.boomlings.com/database/getGJComments21.php", {
                             headers,
                             body: params,
                             method: "POST"
@@ -168,7 +168,7 @@ let server = Bun.serve({
         }
     },
 
-    port: process.env.PORT,
+    port: process.env.PORT ?? 80,
     development: process.env.DEVELOPMENT == "true"
 });
 
@@ -177,4 +177,4 @@ Bun.cron("* * * * *", () => {
     db.run("DELETE FROM LevelComments WHERE updated_at < ?", Date.now() - 600000 /* 10 mins */);
 });
 
-console.log(`Comments Preview server on port ${process.env.PORT}`);
+console.log(`Comments Preview server on port ${server.port}`);

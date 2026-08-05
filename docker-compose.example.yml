@@ -1,0 +1,14 @@
+services:
+  comments-preview-server:
+    build: .
+    restart: unless-stopped
+    working_dir: /app
+
+    environment:
+      PORT: 8080
+      DEVELOPMENT: "false"
+      BOOMLINGS_AUTH: ""
+      BOOMLINGS_ENDPOINT: "https://www.boomlings.com/database/getGJComments21.php"
+
+    ports:
+      - "8080:8080"
