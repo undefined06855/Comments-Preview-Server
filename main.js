@@ -79,10 +79,10 @@ let server = Bun.serve({
 
         "/v1/comments": async req => {
             return new Response(JSON.stringify(await (async () => {
-                let ip = req.headers["X-Forwarded-For"] ?? server.requestIP(req).address;
+                let ip = req.headers["CF-Connecting-IP"] ?? server.requestIP(req).address;
                 let res = limiter.check("/comments", ip);
                 if (res.limited) {
-                    console.log(`${ip} is being rate limited!`)
+                    console.log(`${ip} is being rate limited!`);
                     return { error: "You are being rate limited!" };
                 }
 
