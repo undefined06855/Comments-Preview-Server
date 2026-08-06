@@ -157,17 +157,15 @@ let server = Bun.serve({
                     }));
                 }
 
-                collect(
-                    (await Promise.allSettled(promises))
-                        .filter(res => res.status == "fulfilled")
-                        .map(res => res.value)
-                        .flat()
-                );
+                gdComments = (await Promise.allSettled(promises))
+                    .filter(res => res.status == "fulfilled")
+                    .map(res => res.value)
+                    .flat()
+
+                collect(gdComments);
 
                 // and put the gd comments in the db
                 for (let comment of gdComments) {
-                    if ("invalid" in comment) continue;
-
                     let keys = Object.keys(comment).join(", ");
                     let values = "?, ".repeat(Object.keys(comment).length).slice(0, -2);
                     db.run(`INSERT INTO LevelComments (${keys}) VALUES (${values})`, ...Object.values(comment));
