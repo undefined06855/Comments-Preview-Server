@@ -47,18 +47,18 @@ function boomlingsToSQL(id, boomlings) {
         userData[parseInt(userSplit[i])] = userSplit[i + 1];
     }
 
-    let comment;
+    let comment = atob(commentData[2].replaceAll("-", "+").replaceAll("_", "/"));
 
-    try {
-        comment = atob(commentData[2].replaceAll("-", "+").replaceAll("_", "/"))
-    } catch(err) {
-        console.log(commentData);
-        console.log(comment);
-        console.log(boomlings);
-        console.log(id);
-        throw err;
-    }
-
+    // try {
+    //     comment = atob(commentData[2].replaceAll("-", "+").replaceAll("_", "/"))
+    // } catch(err) {
+    //     console.log(commentData);
+    //     console.log(comment);
+    //     console.log(boomlings);
+    //     console.log(id);
+    //     throw err;
+    // }
+    
     return {
         id,
         comment,
