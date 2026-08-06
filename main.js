@@ -58,7 +58,7 @@ function boomlingsToSQL(id, boomlings) {
     //     console.log(id);
     //     throw err;
     // }
-    
+
     return {
         id,
         comment,
@@ -151,6 +151,7 @@ let server = Bun.serve({
                         if (rawText == "-1") { reject(rawText); return; }
                         if (rawText == "too many requests") { reject(rawText); return; }
                         if (rawText.length < 8) { reject(rawText); return; }
+                        if (rawText.indexOf(":") == -1) { reject("no user data"); return; }
 
                         let boomlingsComments = rawText.split("|");
                         resolve(boomlingsComments.map(boom => boomlingsToSQL(id, boom)));
