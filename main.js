@@ -59,16 +59,21 @@ function boomlingsToSQL(id, boomlings) {
     //     throw err;
     // }
 
+    function fallbackForNaN(value) {
+        if (isNaN(value)) return 1;
+        else return value;
+    }
+
     return {
         id,
         comment,
-        likes: parseInt(commentData[4]),
-        player_name: userData[1],
-        icon_main_color: parseInt(userData[10]),
-        icon_secondary_color: parseInt(userData[11]),
-        icon_glow_color: parseInt(userData[51]),
-        icon_frame: parseInt(userData[9]),
-        icon_type: parseInt(userData[14]),
+        likes: fallbackForNaN(parseInt(commentData[4])),
+        player_name: userData[1] ?? "Unknown",
+        icon_main_color: fallbackForNaN(parseInt(userData[10])),
+        icon_secondary_color: fallbackForNaN(parseInt(userData[11])),
+        icon_glow_color: fallbackForNaN(parseInt(userData[51])),
+        icon_frame: fallbackForNaN(parseInt(userData[9])),
+        icon_type: fallbackForNaN(parseInt(userData[14])),
         updated_at: Date.now(),
     }
 }
@@ -79,15 +84,11 @@ let server = Bun.serve({
 
         "/v1/comments": async req => {
             return new Response(JSON.stringify(await (async () => {
-                let ip = req.headers.get("cf-connecting-ip");
-                if (ip) {
-                    let res = limiter.check("/comments", ip);
-                    if (res.limited) {
-                        console.log(`${ip} is being rate limited!`);
-                        return { error: "You are being rate limited!" };
-                    }
-                } else {
-                    console.warn("no ip header");
+                let ip = req.headers.get("cf-connecting-ip") ?? server.requestIP(req).address;
+                let res = limiter.check("/comments", ip);
+                if (res.limited) {
+                    console.log(`${ip} is being rate limited!`);
+                    return { error: "You are being rate limited!" };
                 }
 
                 let url = new URL(req.url);
