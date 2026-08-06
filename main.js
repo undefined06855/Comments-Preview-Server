@@ -79,7 +79,7 @@ let server = Bun.serve({
 
         "/v1/comments": async req => {
             return new Response(JSON.stringify(await (async () => {
-                let ip = req.headers.get("x-real-ip");
+                let ip = req.headers.get("cf-connecting-ip");
                 if (ip) {
                     let res = limiter.check("/comments", ip);
                     if (res.limited) {
