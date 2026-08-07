@@ -138,8 +138,7 @@ let server = Bun.serve({
                         process.env.BOOMLINGS_ENDPOINT ?? "https://www.boomlings.com/database/getGJComments21.php", {
                             headers,
                             body: params,
-                            method: "POST",
-                            verbose: true
+                            method: "POST"
                         }
                     );
 
