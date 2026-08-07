@@ -31,6 +31,7 @@ const limiter = new RateLimiter({
  * https://boomlings.dev/resources/server/comment
  * @param {number} id
  * @param {string} boomlings
+ * @returns {false | Record<string, any>}
  */
 function boomlingsToSQL(id, boomlings) {
     let [ commentRaw, userRaw ] = boomlings.split(":");
@@ -47,22 +48,15 @@ function boomlingsToSQL(id, boomlings) {
         userData[parseInt(userSplit[i])] = userSplit[i + 1];
     }
 
-    let comment = atob(commentData[2].replaceAll("-", "+").replaceAll("_", "/"));
-
-    // try {
-    //     comment = atob(commentData[2].replaceAll("-", "+").replaceAll("_", "/"))
-    // } catch(err) {
-    //     console.log(commentData);
-    //     console.log(comment);
-    //     console.log(boomlings);
-    //     console.log(id);
-    //     throw err;
-    // }
+    for (let key of [ 2, 4 ]) { if (!(key in commentData)) return false; }
+    for (let key of [ 1, 10, 11, 51, 9, 14 ]) { if (!(key in userData)) return false; }
 
     function fallbackForNaN(value) {
         if (isNaN(value)) return 1;
         else return value;
     }
+
+    let comment = atob(commentData[2].replaceAll("-", "+").replaceAll("_", "/"));
 
     return {
         id,
@@ -158,8 +152,11 @@ let server = Bun.serve({
                         if (rawText.length < 8) { reject(rawText); return; }
                         if (rawText.indexOf(":") == -1) { reject("no user data"); return; }
 
-                        let boomlingsComments = rawText.split("|");
-                        resolve(boomlingsComments.map(boom => boomlingsToSQL(id, boom)));
+                        resolve(
+                            rawText.split("|")
+                                .map(boom => boomlingsToSQL(id, boom))
+                                .filter(boom => boom != false)
+                        );
                     }));
                 }
 
