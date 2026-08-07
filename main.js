@@ -48,26 +48,33 @@ function boomlingsToSQL(id, boomlings) {
         userData[parseInt(userSplit[i])] = userSplit[i + 1];
     }
 
-    for (let key of [ 2, 4 ]) { if (!(key in commentData)) return false; }
-    for (let key of [ 1, 10, 11, 51, 9, 14 ]) { if (!(key in userData)) return false; }
+    // only required key
+    if (!(2 in commentData)) {
+        return false;
+    }
 
-    function fallbackForNaN(value) {
-        if (isNaN(value)) return 1;
+    function fallbackForNaN(value, fallback) {
+        if (isNaN(value)) return fallback;
         else return value;
     }
 
     let comment = atob(commentData[2].replaceAll("-", "+").replaceAll("_", "/"));
 
+    // glow is disabled ("2" is enabled)
+    if (userData[15] == "0") {
+        userData[51] = -1;
+    }
+
     return {
         id,
         comment,
-        likes: fallbackForNaN(parseInt(commentData[4])),
+        likes: fallbackForNaN(parseInt(commentData[4]), 0),
         player_name: userData[1] == "" ? "Unknown" : userData[1],
-        icon_main_color: fallbackForNaN(parseInt(userData[10])),
-        icon_secondary_color: fallbackForNaN(parseInt(userData[11])),
-        icon_glow_color: fallbackForNaN(parseInt(userData[51])),
-        icon_frame: fallbackForNaN(parseInt(userData[9])),
-        icon_type: fallbackForNaN(parseInt(userData[14])),
+        icon_main_color: fallbackForNaN(parseInt(userData[10]), 0),
+        icon_secondary_color: fallbackForNaN(parseInt(userData[11]), 3),
+        icon_glow_color: fallbackForNaN(parseInt(userData[51]), -1),
+        icon_frame: fallbackForNaN(parseInt(userData[9]), 1),
+        icon_type: fallbackForNaN(parseInt(userData[14]), 0),
         updated_at: Date.now(),
     }
 }
