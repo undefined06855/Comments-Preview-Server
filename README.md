@@ -8,9 +8,8 @@ cp docker-compose.example.yml docker-compose.yml
 nano docker-compose.yml # or your text editor of choice
 docker compose up # or with --build to update
 
-# to stop run
+# to stop the server, run
 docker compose down
-# and if anyone can figure out why docker can't stop it within 10s let me know please
 ```
 
 ...or create a docker container using your Docker UI of choice (Portainer, Pelican, Docker Desktop, etc.), and point

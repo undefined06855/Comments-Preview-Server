@@ -188,4 +188,14 @@ Bun.cron("* * * * *", () => {
     db.run("DELETE FROM LevelComments WHERE updated_at < ?", Date.now() - 1200000 /* 20 mins */);
 });
 
+process.on("SIGTERM", async () => {
+    await server.stop(true);
+    process.exit(0);
+});
+
+process.on("SIGINT", async () => {
+    await server.stop(true);
+    process.exit(0);
+});
+
 console.log(`Comments Preview server on port ${server.port}`);
