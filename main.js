@@ -62,7 +62,7 @@ function boomlingsToSQL(id, boomlings) {
         id,
         comment,
         likes: fallbackForNaN(parseInt(commentData[4])),
-        player_name: userData[1] ?? "Unknown",
+        player_name: userData[1] == "" ? "Unknown" : userData[1],
         icon_main_color: fallbackForNaN(parseInt(userData[10])),
         icon_secondary_color: fallbackForNaN(parseInt(userData[11])),
         icon_glow_color: fallbackForNaN(parseInt(userData[51])),
