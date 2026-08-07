@@ -87,7 +87,6 @@ let server = Bun.serve({
                 let ip = req.headers.get("cf-connecting-ip") ?? server.requestIP(req).address;
                 let res = limiter.check("/comments", ip);
                 if (res.limited) {
-                    console.log(`${ip} is being rate limited!`);
                     return { error: "You are being rate limited!" };
                 }
 
