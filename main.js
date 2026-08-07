@@ -121,49 +121,49 @@ let server = Bun.serve({
 
                 // ...and for all of the ids we dont already have in the db, fetch them from gd
                 let outdatedIDs = ids.filter(id => !Object.keys(levels).includes(id.toString()));
-                let promises = [];
-                for (let id of outdatedIDs) {
-                    promises.push(new Promise(async (resolve, reject) => {
-                        // await (async () => { return new Promise(resolve => setTimeout(resolve, i*150))})();
+                let promises = outdatedIDs.map(async id => {
+                    // https://boomlings.dev/endpoints/comments/getGJComments21
+                    let params = new URLSearchParams();
+                    params.append("levelID", id);
+                    params.append("page", "0");
+                    params.append("secret", "Wmfd2893gb7");
+                    params.append("mode", "1"); // most liked
+                    params.append("count", "5");
 
-                        // https://boomlings.dev/endpoints/comments/getGJComments21
-                        let params = new URLSearchParams();
-                        params.append("levelID", id);
-                        params.append("page", "0");
-                        params.append("secret", "Wmfd2893gb7");
-                        params.append("mode", "1"); // most liked
-                        params.append("count", "5");
+                    let headers = {};
+                    headers["User-Agent"] = "";
+                    headers["Authorization"] = process.env.BOOMLINGS_AUTH ?? "";
 
-                        let headers = {};
-                        headers["User-Agent"] = "";
-                        headers["Authorization"] = process.env.BOOMLINGS_AUTH ?? "";
+                    let res = await fetch(
+                        process.env.BOOMLINGS_ENDPOINT ?? "https://www.boomlings.com/database/getGJComments21.php", {
+                            headers,
+                            body: params,
+                            method: "POST"
+                        }
+                    );
 
-                        let res = await fetch(
-                            process.env.BOOMLINGS_ENDPOINT ?? "https://www.boomlings.com/database/getGJComments21.php", {
-                                headers,
-                                body: params,
-                                method: "POST"
-                            }
-                        );
+                    let rawText = await res.text();
+                    if (rawText == "-1") return false;
+                    if (rawText == "too many requests") return false;
+                    if (rawText.length < 8) return false;
+                    if (rawText.indexOf(":") == -1) return false;
 
-                        let rawText = await res.text();
-                        if (rawText == "-1") { reject(rawText); return; }
-                        if (rawText == "too many requests") { reject(rawText); return; }
-                        if (rawText.length < 8) { reject(rawText); return; }
-                        if (rawText.indexOf(":") == -1) { reject("no user data"); return; }
-
-                        resolve(
-                            rawText.split("|")
-                                .map(boom => boomlingsToSQL(id, boom))
-                                .filter(boom => boom != false)
-                        );
-                    }));
-                }
+                    return rawText.split("|")
+                        .map(boom => boomlingsToSQL(id, boom))
+                        .filter(boom => boom != false)
+                });
 
                 gdComments = (await Promise.allSettled(promises))
-                    .filter(res => res.status == "fulfilled")
+                    .filter(res => {
+                        if (res.status == "rejected") {
+                            console.warn(`rejected promise:\n${res.reason}`);
+                        }
+
+                        return res.status == "fulfilled";
+                    })
                     .map(res => res.value)
                     .flat()
+                    .filter(value => value != false)
 
                 collect(gdComments);
 
