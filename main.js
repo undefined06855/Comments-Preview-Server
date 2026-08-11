@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS LevelComments (
 
     comment                 TEXT NOT NULL,
     likes                   INTEGER NOT NULL,
+    age                     TEXT NOT NULL,
 
     player_name             TEXT NOT NULL,
     icon_main_color         INTEGER NOT NULL,
@@ -16,9 +17,24 @@ CREATE TABLE IF NOT EXISTS LevelComments (
     icon_frame              INTEGER NOT NULL,
     icon_type               INTEGER NOT NULL,
 
-    updated_at              INTEGER NOT NULL
+    expires_at              INTEGER NOT NULL
 )
 `);
+
+/**
+ * @typedef {Object} LevelComment
+ * @property {number} id
+ * @property {string} comment
+ * @property {number} likes
+ * @property {string} age
+ * @property {string} player_name
+ * @property {number} icon_main_color
+ * @property {number} icon_secondary_color
+ * @property {number} icon_glow_color
+ * @property {number} icon_frame
+ * @property {number} icon_type
+ * @property {number | undefined} expires_at
+ */
 
 // 4 requests per 5 seconds
 const limiter = new RateLimiter({
@@ -31,7 +47,7 @@ const limiter = new RateLimiter({
  * https://boomlings.dev/resources/server/comment
  * @param {number} id
  * @param {string} boomlings
- * @returns {false | Record<string, any>}
+ * @returns {false | LevelComment}
  */
 function boomlingsToSQL(id, boomlings) {
     let [ commentRaw, userRaw ] = boomlings.split(":");
@@ -69,14 +85,45 @@ function boomlingsToSQL(id, boomlings) {
         id,
         comment,
         likes: fallbackForNaN(parseInt(commentData[4]), 0),
+        age: commentData[9] == "" ? "Unknown" : commentData[9],
+
         player_name: userData[1] == "" ? "Unknown" : userData[1],
         icon_main_color: fallbackForNaN(parseInt(userData[10]), 0),
         icon_secondary_color: fallbackForNaN(parseInt(userData[11]), 3),
         icon_glow_color: fallbackForNaN(parseInt(userData[51]), -1),
         icon_frame: fallbackForNaN(parseInt(userData[9]), 1),
         icon_type: fallbackForNaN(parseInt(userData[14]), 0),
-        updated_at: Date.now(),
+
+        // filled in by calculateCacheability
+        expires_at: undefined
     }
+}
+
+/**
+ * Returns how long to cache these comments, in minutes.
+ * (it's spelt Cacheability and not Cachability?)
+ * @param {Array<LevelComment>} comments
+ */
+function calculateCacheability(comments) {
+    if (comments.length == 0) return 0;
+
+    // force 20 mins if any of the top comments are not recent
+    if (comments.slice(0, 10).some(comment => comment.age.includes("second"))) {
+        return 20;
+    }
+
+    let ret = 5;
+
+    // add a day if any of the top 20 comments have "year" in their age
+    ret += comments.slice(0, 20).some(comment => comment.age.includes("year")) ? 1440 : 0;
+
+    // add an hour for any of the top 5 comments which differ by more than 40 likes each
+    ret += comments.slice(0, 5).filter((comment, i) => i == 0 ? false : comments[i - 1].likes - comment.likes > 40).length * 60;
+
+    // add 30 mins if we have a full 40 comments (see count param)
+    ret += comments.length == 40 ? 30 : 0;
+
+    return ret;
 }
 
 let server = Bun.serve({
@@ -128,19 +175,20 @@ let server = Bun.serve({
 
                 // ...and for all of the ids we dont already have in the db, fetch them from gd
                 let outdatedIDs = ids.filter(id => !Object.keys(levels).includes(id.toString()));
-                let promises = outdatedIDs.map(async id => {
+                let promises = outdatedIDs.map(async (id, i) => {
                     // https://boomlings.dev/endpoints/comments/getGJComments21
                     let params = new URLSearchParams();
                     params.append("levelID", id);
                     params.append("page", "0");
                     params.append("secret", "Wmfd2893gb7");
                     params.append("mode", "1"); // most liked
-                    params.append("count", "5");
+                    params.append("count", "40"); // if this is updated make sure to update calculateCacheability
 
                     let headers = {};
                     headers["User-Agent"] = "";
                     headers["Authorization"] = process.env.BOOMLINGS_AUTH ?? "";
 
+                    console.log(`made request x${i+1}`);
                     let res = await fetch(
                         process.env.BOOMLINGS_ENDPOINT ?? "https://www.boomlings.com/database/getGJComments21.php", {
                             headers,
@@ -170,8 +218,14 @@ let server = Bun.serve({
                     })
                     .map(res => res.value)
                     .flat()
-                    .filter(value => value != false)
+                    .filter(value => value != false);
 
+                // calculate cacheability and cache length for all of the comments
+                // one point of cacheability = one extra minute of caching
+                let cachability = calculateCacheability(gdComments);
+                gdComments.forEach(comment => comment.expires_at = Date.now() + cachability * 60000);
+
+                gdComments = gdComments.slice(0, 5);
                 collect(gdComments);
 
                 // and put the gd comments in the db
@@ -190,9 +244,9 @@ let server = Bun.serve({
     development: process.env.DEVELOPMENT == "true"
 });
 
-// every minute, clear old comments
+// every minute, clear old comments where they expired in the past
 Bun.cron("* * * * *", () => {
-    db.run("DELETE FROM LevelComments WHERE updated_at < ?", Date.now() - 1200000 /* 20 mins */);
+    db.run("DELETE FROM LevelComments WHERE expires_at < ?", Date.now());
 });
 
 process.on("SIGTERM", async () => {
@@ -200,6 +254,7 @@ process.on("SIGTERM", async () => {
     process.exit(0);
 });
 
+// for docker?
 process.on("SIGINT", async () => {
     await server.stop(true);
     process.exit(0);
