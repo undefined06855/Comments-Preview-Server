@@ -55,7 +55,7 @@ async function log(name, data={}) {
                 }
             }),
             headers: {
-                "User-Agent": "Comments Preview Server"
+                "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.3"
             }
         }
     );
@@ -65,6 +65,8 @@ async function log(name, data={}) {
     if ("error" in json) {
         console.warn(`Error when logging Umami event: ${JSON.stringify(json.error)}`);
     }
+
+    console.log(json);
 }
 
 export default {
