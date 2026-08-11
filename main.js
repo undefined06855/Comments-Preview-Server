@@ -260,6 +260,7 @@ let server = Bun.serve({
                     modVersion: url.searchParams.get("modVersion") ?? "unknown",
                     platform: url.searchParams.get("platform") ?? "unknown",
                     geodeVersion: url.searchParams.get("geodeVersion") ?? "unknown",
+                    gdVersion: url.searchParams.get("gdVersion") ?? "unknown",
                     cacheability: `${cacheability} mins`,
                 });
 
