@@ -50,6 +50,7 @@ const limiter = new RateLimiter({
  * @returns {false | LevelComment}
  */
 function boomlingsToSQL(id, boomlings) {
+    if (boomlings.indexOf(":") == -1) return false;
     let [ commentRaw, userRaw ] = boomlings.split(":");
 
     let commentSplit = commentRaw.split("~");
@@ -200,7 +201,6 @@ let server = Bun.serve({
                     if (rawText == "-1") return false;
                     if (rawText == "too many requests") return false;
                     if (rawText.length < 8) return false;
-                    if (rawText.indexOf(":") == -1) return false;
 
                     return rawText.split("|")
                         .map(boom => boomlingsToSQL(id, boom))
