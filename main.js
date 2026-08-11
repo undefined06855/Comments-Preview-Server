@@ -4,7 +4,7 @@ import { RateLimiter } from "@rabbit-company/rate-limiter";
 const db = new Database(":memory:");
 db.run(`
 CREATE TABLE IF NOT EXISTS LevelComments (
-    id                      INTEGER,
+    id                      INTEGER NOT NULL,
 
     comment                 TEXT NOT NULL,
     likes                   INTEGER NOT NULL,
@@ -17,6 +17,13 @@ CREATE TABLE IF NOT EXISTS LevelComments (
     icon_frame              INTEGER NOT NULL,
     icon_type               INTEGER NOT NULL,
 
+    expires_at              INTEGER NOT NULL
+)
+`);
+
+db.run(`
+CREATE TABLE IF NOT EXISTS LevelsWithZeroComments (
+    id                      INTEGER NOT NULL,
     expires_at              INTEGER NOT NULL
 )
 `);
@@ -174,8 +181,12 @@ let server = Bun.serve({
                 dbComments = db.prepare(`SELECT * FROM LevelComments WHERE id IN (${ids.join(", ")})`).all();
                 collect(dbComments);
 
-                // ...and for all of the ids we dont already have in the db, fetch them from gd
+                // ...and for all of the ids we dont already have in the db, fetch them from gd, skipping over levels
+                // with zero comments
                 let outdatedIDs = ids.filter(id => !Object.keys(levels).includes(id.toString()));
+                let zeroCommentLevelIDs = db.prepare(`SELECT id FROM LevelsWithZeroComments WHERE id IN (${outdatedIDs.join(", ")})`).all().map(row => row.id);
+                outdatedIDs = outdatedIDs.filter(id => !zeroCommentLevelIDs.includes(id));
+
                 let promises = outdatedIDs.map(async id => {
                     // https://boomlings.dev/endpoints/comments/getGJComments21
                     let params = new URLSearchParams();
@@ -200,9 +211,18 @@ let server = Bun.serve({
                     let rawText = await res.text();
                     if (rawText == "-1") return false;
                     if (rawText == "too many requests") return false;
-                    if (rawText.length < 8) return false;
 
-                    return rawText.split("|")
+                    let [ commentsData, suffix ] = rawText.split("#");
+
+                    // total:from:per-page
+                    if (suffix == "0:0:40") {
+                        // this level has zero comments, cache that for 20 mins
+                        console.log("level has zero comments, caching for 20 mins");
+                        db.run("INSERT INTO LevelsWithZeroComments (id, expires_at) VALUES (?, ?)", id, Date.now() + 1200000);
+                        return false;
+                    }
+
+                    return commentsData.split("|")
                         .map(boom => boomlingsToSQL(id, boom))
                         .filter(boom => boom != false)
                 });
@@ -216,8 +236,8 @@ let server = Bun.serve({
                         return res.status == "fulfilled";
                     })
                     .map(res => res.value)
-                    .flat()
-                    .filter(value => value != false);
+                    .filter(value => value != false)
+                    .flat();
 
                 // calculate cacheability and cache length for all of the comments
                 // one point of cacheability = one extra minute of caching
@@ -248,6 +268,7 @@ let server = Bun.serve({
 // every minute, clear old comments where they expired in the past
 Bun.cron("* * * * *", () => {
     db.run("DELETE FROM LevelComments WHERE expires_at < ?", Date.now());
+    db.run("DELETE FROM LevelsWithZeroComments WHERE expires_at < ?", Date.now());
 });
 
 process.on("SIGTERM", async () => {
