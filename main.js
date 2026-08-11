@@ -212,15 +212,14 @@ let server = Bun.serve({
                     );
 
                     let rawText = await res.text();
-                    if (rawText == "-1") { umami.log("server rejection", { type: "-1" }); return false; }
-                    if (rawText == "too many requests") { umami.log("server rejection", { type: "proxy too many requests" }); return false; }
+                    if (rawText == "-1") return false;
+                    if (rawText == "too many requests")  return false;
 
                     let [ commentsData, suffix ] = rawText.split("#");
 
                     // total:from:per-page
                     if (suffix == "0:0:40") {
                         // this level has zero comments, cache that for 20 mins
-                        umami.log("zero comments", { id });
                         console.log("level has zero comments, caching for 20 mins");
                         db.run("INSERT INTO LevelsWithZeroComments (id, expires_at) VALUES (?, ?)", id, Date.now() + 1200000);
                         return false;
@@ -258,10 +257,11 @@ let server = Bun.serve({
                     dbComments: dbComments.length,
                     totalComments: gdComments.length + dbComments.length,
                     levelCount: Object.keys(levels).length,
-                    cacheability,
+                    modVersion: url.searchParams.get("modVersion") ?? "unknown",
+                    platform: url.searchParams.get("platform") ?? "unknown",
+                    geodeVersion: url.searchParams.get("geodeVersion") ?? "unknown",
+                    cacheability: `${cacheability} mins`,
                 });
-
-                console.log(`made ${outdatedIDs.length} requests, mod version ${url.searchParams.get("modVersion")}, will cache for ${cacheability} mins`);
 
                 // and put the gd comments in the db
                 for (let comment of gdComments) {
