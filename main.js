@@ -173,6 +173,8 @@ let server = Bun.serve({
                             levels[comment.id] = [];
                         }
 
+                        if (levels[comment.id].length >= 5) return;
+
                         levels[comment.id].push(comment);
                     }
                 }
@@ -244,7 +246,6 @@ let server = Bun.serve({
                 let cacheability = calculateCacheability(gdComments);
                 gdComments.forEach(comment => comment.expires_at = Date.now() + cacheability * 60000);
 
-                gdComments = gdComments.slice(0, 5);
                 collect(gdComments);
 
                 console.log(`made ${outdatedIDs.length} requests, mod version ${url.searchParams.get("modVersion")}, will cache for ${cacheability} mins`);
