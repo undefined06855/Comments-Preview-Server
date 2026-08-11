@@ -65,8 +65,6 @@ async function log(name, data={}) {
     if ("error" in json) {
         console.warn(`Error when logging Umami event: ${JSON.stringify(json.error)}`);
     }
-
-    console.log(json);
 }
 
 export default {
