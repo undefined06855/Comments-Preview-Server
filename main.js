@@ -173,7 +173,7 @@ let server = Bun.serve({
                             levels[comment.id] = [];
                         }
 
-                        if (levels[comment.id].length >= 5) return;
+                        if (levels[comment.id].length >= 5) continue;
 
                         levels[comment.id].push(comment);
                     }
