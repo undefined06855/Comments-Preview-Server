@@ -220,7 +220,6 @@ let server = Bun.serve({
                     // total:from:per-page
                     if (suffix == "0:0:40") {
                         // this level has zero comments, cache that for 20 mins
-                        console.log("level has zero comments, caching for 20 mins");
                         db.run("INSERT INTO LevelsWithZeroComments (id, expires_at) VALUES (?, ?)", id, Date.now() + 1200000);
                         return false;
                     }
