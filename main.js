@@ -175,7 +175,7 @@ let server = Bun.serve({
 
                 // ...and for all of the ids we dont already have in the db, fetch them from gd
                 let outdatedIDs = ids.filter(id => !Object.keys(levels).includes(id.toString()));
-                let promises = outdatedIDs.map(async (id, i) => {
+                let promises = outdatedIDs.map(async id => {
                     // https://boomlings.dev/endpoints/comments/getGJComments21
                     let params = new URLSearchParams();
                     params.append("levelID", id);
@@ -188,7 +188,6 @@ let server = Bun.serve({
                     headers["User-Agent"] = "";
                     headers["Authorization"] = process.env.BOOMLINGS_AUTH ?? "";
 
-                    console.log(`made request x${i+1} for id ${id}, mod version ${url.searchParams.get("modVersion")}`);
                     let res = await fetch(
                         process.env.BOOMLINGS_ENDPOINT ?? "https://www.boomlings.com/database/getGJComments21.php", {
                             headers,
@@ -222,11 +221,13 @@ let server = Bun.serve({
 
                 // calculate cacheability and cache length for all of the comments
                 // one point of cacheability = one extra minute of caching
-                let cachability = calculateCacheability(gdComments);
-                gdComments.forEach(comment => comment.expires_at = Date.now() + cachability * 60000);
+                let cacheability = calculateCacheability(gdComments);
+                gdComments.forEach(comment => comment.expires_at = Date.now() + cacheability * 60000);
 
                 gdComments = gdComments.slice(0, 5);
                 collect(gdComments);
+
+                console.log(`made ${outdatedIDs.length} requests, mod version ${url.searchParams.get("modVersion")}, will cache for ${cacheability} mins`);
 
                 // and put the gd comments in the db
                 for (let comment of gdComments) {
