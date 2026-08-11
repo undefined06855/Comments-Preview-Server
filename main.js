@@ -188,7 +188,7 @@ let server = Bun.serve({
                     headers["User-Agent"] = "";
                     headers["Authorization"] = process.env.BOOMLINGS_AUTH ?? "";
 
-                    console.log(`made request x${i+1}`);
+                    console.log(`made request x${i+1} for id ${id}`);
                     let res = await fetch(
                         process.env.BOOMLINGS_ENDPOINT ?? "https://www.boomlings.com/database/getGJComments21.php", {
                             headers,
