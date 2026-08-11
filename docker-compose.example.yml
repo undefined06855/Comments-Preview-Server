@@ -10,5 +10,8 @@ services:
       BOOMLINGS_AUTH: ""
       BOOMLINGS_ENDPOINT: "https://www.boomlings.com/database/getGJComments21.php"
 
+      UMAMI_ENDPOINT: ""
+      UMAMI_HOSTNAME: ""
+      UMAMI_WEBSITE_ID: ""
     ports:
       - "8080:8080"

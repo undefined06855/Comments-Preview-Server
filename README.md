@@ -24,6 +24,11 @@ PORT=8080 # defaults to 80
 DEVELOPMENT=true # defaults to false
 BOOMLINGS_ENDPOINT=https://www.boomlings.com/database/getGJComments21.php # defaults to boomlings
 BOOMLINGS_AUTH=whatever # optional, gets passed as the Authorization header to the endpoint
+
+# for optional telemetry, see https://umami.is/ or https://docs.umami.is/docs/api
+UMAMI_ENDPOINT=https://your-umami-instance/api
+UMAMI_HOSTNAME=
+UMAMI_WEBSITE_ID=
 ```
 
 If you don't have a whitelisted proxy set up and you are using the vanilla boomlings.com endpoint, it is likely that you
