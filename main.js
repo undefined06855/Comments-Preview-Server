@@ -159,6 +159,11 @@ let server = Bun.serve({
                         return { error: `ID at index ${i} is invalid!` };
                     }
 
+                    // certainly invalid (probably id zero)
+                    if (int < 128) {
+                        continue;
+                    }
+
                     ids.push(int);
                 }
 
@@ -224,7 +229,7 @@ let server = Bun.serve({
 
                     let [ commentsData, suffix ] = rawText.split("#");
                     let [ total, from, perPage ] = suffix.split(":");
-                    
+
                     if (parseInt(total) == 0) {
                         // this level has zero comments, cache that for 20 mins
                         db.run("INSERT INTO LevelsWithZeroComments (id, expires_at) VALUES (?, ?)", id, Date.now() + 1200000);
