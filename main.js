@@ -212,13 +212,20 @@ let server = Bun.serve({
                     );
 
                     let rawText = await res.text();
-                    if (rawText == "-1") return false;
-                    if (rawText == "too many requests")  return false;
+                    if (rawText == "-1") {
+                        umami.log("server error", { levelID: id, reason: "-1" });
+                        return false;
+                    }
+
+                    if (rawText == "too many requests") {
+                        umami.log("server error", { levelID: id, reason: "proxy ratelimit" });
+                        return false;
+                    }
 
                     let [ commentsData, suffix ] = rawText.split("#");
-
-                    // total:from:per-page
-                    if (suffix == "0:0:40") {
+                    let [ total, from, perPage ] = suffix.split(":");
+                    
+                    if (parseInt(total) == 0) {
                         // this level has zero comments, cache that for 20 mins
                         db.run("INSERT INTO LevelsWithZeroComments (id, expires_at) VALUES (?, ?)", id, Date.now() + 1200000);
                         return false;
@@ -231,11 +238,6 @@ let server = Bun.serve({
 
                 gdComments = (await Promise.allSettled(promises))
                     .filter(res => {
-                        if (res.status == "rejected") {
-                            console.warn(`rejected promise:\n${res.reason}`);
-                            umami.log("rejected promise", { reason: res.reason });
-                        }
-
                         return res.status == "fulfilled";
                     })
                     .map(res => res.value)
