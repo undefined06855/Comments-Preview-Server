@@ -266,7 +266,7 @@ let server = Bun.serve({
                         }
 
                         umami.log("single level", {
-                            cacheability: comments["raw_cacheability"]
+                            cacheability: `${comments["raw_cacheability"]} mins`
                         });
 
                         delete comments["raw_cacheability"];
