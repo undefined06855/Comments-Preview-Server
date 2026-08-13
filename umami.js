@@ -55,7 +55,7 @@ async function log(name, data={}) {
         }
     });
 
-    if (queue.length >= 100) {
+    if (queue.length >= 200) {
         fetch(
             `${process.env.UMAMI_ENDPOINT}/batch`, {
                 method: "POST",
@@ -65,8 +65,6 @@ async function log(name, data={}) {
                 }
             }
         );
-
-        console.log(`sent over ${queue.length} events`);
 
         queue.length = 0;
     }
