@@ -247,12 +247,15 @@ let server = Bun.serve({
                     })
                     .map(res => res.value)
                     .filter(value => value != false)
-                    .flat();
+                    .map(comments => {
+                        // calculate cacheability and cache length for all of the comments
+                        // one point of cacheability = one extra minute of caching
+                        let cacheability = calculateCacheability(comments);
+                        comments.forEach(comment => comment.expires_at = Date.now() + cacheability * 60000);
 
-                // calculate cacheability and cache length for all of the comments
-                // one point of cacheability = one extra minute of caching
-                let cacheability = calculateCacheability(gdComments);
-                gdComments.forEach(comment => comment.expires_at = Date.now() + cacheability * 60000);
+                        return comments;
+                    })
+                    .flat();
 
                 collect(gdComments);
 
@@ -263,6 +266,7 @@ let server = Bun.serve({
                     dbComments: dbComments.length,
                     totalComments: gdComments.length + dbComments.length,
                     levelCount: Object.keys(levels).length,
+                    inputLevelCount: ids.length,
                     modVersion: url.searchParams.get("modVersion") ?? "unknown",
                     platform: url.searchParams.get("platform") ?? "unknown",
                     geodeVersion: url.searchParams.get("geodeVersion") ?? "unknown",
