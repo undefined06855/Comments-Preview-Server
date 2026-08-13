@@ -270,8 +270,7 @@ let server = Bun.serve({
                     modVersion: url.searchParams.get("modVersion") ?? "unknown",
                     platform: url.searchParams.get("platform") ?? "unknown",
                     geodeVersion: url.searchParams.get("geodeVersion") ?? "unknown",
-                    gdVersion: url.searchParams.get("gdVersion") ?? "unknown",
-                    cacheability: `${cacheability} mins`,
+                    gdVersion: url.searchParams.get("gdVersion") ?? "unknown"
                 });
 
                 // and put the gd comments in the db
