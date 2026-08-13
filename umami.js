@@ -56,7 +56,7 @@ async function log(name, data={}) {
     });
 
     if (queue.length >= 50) {
-        let res = await fetch(
+        fetch(
             `${process.env.UMAMI_ENDPOINT}/batch`, {
                 method: "POST",
                 body: JSON.stringify(queue),
@@ -66,11 +66,7 @@ async function log(name, data={}) {
             }
         );
 
-        let json = await res.json();
-
-        if (json.errors > 0) {
-            console.warn(`Error when logging Umami event: ${JSON.stringify(json.details)}`);
-        }
+        queue.length = 0;
     }
 
 }
