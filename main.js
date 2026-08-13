@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS LevelComments (
 
 db.run(`
 CREATE TABLE IF NOT EXISTS LevelsWithZeroComments (
-    id                      INTEGER NOT NULL,
+    id                      INTEGER PRIMARY KEY,
     expires_at              INTEGER NOT NULL
 )
 `);
