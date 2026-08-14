@@ -254,25 +254,25 @@ let server = Bun.serve({
                         comments.forEach(comment => comment.expires_at = Date.now() + cacheability * 60000);
 
                         // just to pass to the umami log
-                        comments["raw_cacheability"] = cacheability;
+                        // comments["raw_cacheability"] = cacheability;
 
                         return comments;
                     })
-                    .map(comments => {
-                        for (let comment of comments) {
-                            umami.log("single comment", {
-                                comment: comment
-                            });
-                        }
+                    // .map(comments => {
+                    //     for (let comment of comments) {
+                    //         umami.log("single comment", {
+                    //             comment: comment
+                    //         });
+                    //     }
 
-                        umami.log("single level", {
-                            cacheability: `${comments["raw_cacheability"]} mins`
-                        });
+                    //     umami.log("single level", {
+                    //         cacheability: `${comments["raw_cacheability"]} mins`
+                    //     });
 
-                        delete comments["raw_cacheability"];
+                    //     delete comments["raw_cacheability"];
 
-                        return comments;
-                    })
+                    //     return comments;
+                    // })
                     .flat();
 
                 collect(gdComments);
