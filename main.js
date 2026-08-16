@@ -326,6 +326,6 @@ process.on("SIGINT", async () => {
 
 console.log(`Comments Preview server on port ${server.port}`);
 
-if (env.BOOMLINGS_AUTH) {
-    console.log(`Using Boomlings endpoint ${env.BOOMLINGS_ENDPOINT}, with auth ${env.BOOMLINGS_AUTH.substring(0, 5)}...`)
+if (process.env.BOOMLINGS_AUTH) {
+    console.log(`Using Boomlings endpoint ${process.env.BOOMLINGS_ENDPOINT}, with auth ${process.env.BOOMLINGS_AUTH.substring(0, 5)}...`)
 }
