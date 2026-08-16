@@ -55,8 +55,6 @@ async function log(name, data={}) {
         }
     });
 
-    console.log(queue[queue.length - 1]);
-
     if (queue.length >= 200) {
         fetch(
             `${process.env.UMAMI_ENDPOINT}/batch`, {
