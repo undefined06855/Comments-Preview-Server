@@ -46,8 +46,7 @@ CREATE TABLE IF NOT EXISTS LevelsWithZeroComments (
 // 4 requests per 5 seconds
 const limiter = new RateLimiter({
     window: 5000,
-    max: 4,
-    enableCleanup: false
+    max: 4
 });
 
 /**
