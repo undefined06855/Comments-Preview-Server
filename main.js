@@ -1,6 +1,5 @@
 import { Database } from "bun:sqlite"
 import { RateLimiter } from "@rabbit-company/rate-limiter";
-import umami from "./umami";
 
 const db = new Database(":memory:");
 db.run(`
@@ -218,12 +217,10 @@ let server = Bun.serve({
 
                     let rawText = await res.text();
                     if (rawText == "-1") {
-                        umami.log("server error", { levelID: id, reason: "-1" });
                         return false;
                     }
 
                     if (rawText == "too many requests") {
-                        umami.log("server error", { levelID: id, reason: "proxy ratelimit" });
                         return false;
                     }
 
@@ -253,43 +250,11 @@ let server = Bun.serve({
                         let cacheability = calculateCacheability(comments);
                         comments.forEach(comment => comment.expires_at = Date.now() + cacheability * 60000);
 
-                        // just to pass to the umami log
-                        // comments["raw_cacheability"] = cacheability;
-
                         return comments;
                     })
-                    // .map(comments => {
-                    //     for (let comment of comments) {
-                    //         umami.log("single comment", {
-                    //             comment: comment
-                    //         });
-                    //     }
-
-                    //     umami.log("single level", {
-                    //         cacheability: `${comments["raw_cacheability"]} mins`
-                    //     });
-
-                    //     delete comments["raw_cacheability"];
-
-                    //     return comments;
-                    // })
                     .flat();
 
                 collect(gdComments);
-
-                umami.log("request", {
-                    outdatedIDs: outdatedIDs.length,
-                    zeroCommentLevelIDs: zeroCommentLevelIDs.length,
-                    gdComments: gdComments.length,
-                    dbComments: dbComments.length,
-                    totalComments: gdComments.length + dbComments.length,
-                    levelCount: Object.keys(levels).length,
-                    inputLevelCount: ids.length,
-                    modVersion: url.searchParams.get("modVersion") ?? "unknown",
-                    platform: url.searchParams.get("platform") ?? "unknown",
-                    geodeVersion: url.searchParams.get("geodeVersion") ?? "unknown",
-                    gdVersion: url.searchParams.get("gdVersion") ?? "unknown"
-                });
 
                 // and put the gd comments in the db
                 for (let comment of gdComments) {
