@@ -49,6 +49,11 @@ const limiter = new RateLimiter({
     max: 4
 });
 
+const headers = {
+    "Content-Type": "application/json",
+    "Access-Control-Allow-Origin": "*"
+}
+
 /**
  * https://boomlings.dev/resources/server/comment
  * @param {number} id
@@ -147,7 +152,7 @@ let server = Bun.serve({
 
                 let rows = db.prepare("SELECT * FROM LevelComments ORDER BY RANDOM() LIMIT 50").all();
                 return rows.map(row => row.comment);
-            })()), { headers: { "Content-Type": "application/json" } });
+            })()), { headers });
         },
 
         "/v1/comments": async req => {
@@ -276,7 +281,7 @@ let server = Bun.serve({
                 }
 
                 return { levels };
-            })()), { headers: { "Content-Type": "application/json" } });
+            })()), { headers });
         }
     },
 
