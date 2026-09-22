@@ -137,6 +137,19 @@ let server = Bun.serve({
     routes: {
         "/": Response.redirect("https://github.com/undefined06855/Comments-Preview-Server"),
 
+        "/fun": async req => {
+            return new Response(JSON.stringify(await (async () => {
+                let ip = req.headers.get("cf-connecting-ip") ?? server.requestIP(req).address;
+                let res = limiter.check("/fun", ip);
+                if (res.limited) {
+                    return { error: "You are being rate limited!" };
+                }
+
+                let rows = db.prepare("SELECT * FROM LevelComments ORDER BY RANDOM() LIMIT 50").all();
+                return rows.map(row => row.comment);
+            })()), { headers: { "Content-Type": "application/json" } });
+        },
+
         "/v1/comments": async req => {
             return new Response(JSON.stringify(await (async () => {
                 let ip = req.headers.get("cf-connecting-ip") ?? server.requestIP(req).address;
