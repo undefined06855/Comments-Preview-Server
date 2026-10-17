@@ -10,6 +10,7 @@
   "private": true,
   "type": "module",
   "dependencies": {
-    "@rabbit-company/rate-limiter": "^3.0.1"
+    "@rabbit-company/rate-limiter": "^3.0.1",
+    "remove-accents": "^0.5.0"
   }
 }

@@ -1,5 +1,6 @@
 import { Database } from "bun:sqlite"
 import { RateLimiter } from "@rabbit-company/rate-limiter";
+import * as accents from "remove-accents";
 
 const db = new Database(":memory:");
 db.run(`
@@ -86,7 +87,7 @@ function boomlingsToSQL(id, boomlings) {
         else return value;
     }
 
-    let comment = atob(commentData[2].replaceAll("-", "+").replaceAll("_", "/"));
+    let comment = Buffer.from(commentData[2], "base64url").toString("utf8");
 
     // glow is disabled ("2" is enabled)
     if (userData[15] == "0") {
@@ -168,6 +169,10 @@ let server = Bun.serve({
                     return { error: "URL parameters must include `levelIDs` param!" };
                 }
 
+                // for safe parsing of utf8 chars, though fallback to 2.208 if none provided
+                let binaryVersion = parseInt(url.searchParams.get("binaryVersion"));
+                if (isNaN(binaryVersion)) binaryVersion = 46;
+
                 let ids = [];
                 for (let [i, id] of Object.entries(url.searchParams.get("levelIDs").split(","))) {
                     let int = parseInt(id);
@@ -219,6 +224,7 @@ let server = Bun.serve({
                     params.append("secret", "Wmfd2893gb7");
                     params.append("mode", "1"); // most liked
                     params.append("count", "40"); // if this is updated make sure to update calculateCacheability
+                    params.append("binaryVersion", process.env["DEFAULT_BINARY_VER"] ?? "51"); // for 2.209 accents
 
                     let headers = {};
                     headers["User-Agent"] = "";
@@ -278,6 +284,18 @@ let server = Bun.serve({
                     let keys = Object.keys(comment).join(", ");
                     let values = "?, ".repeat(Object.keys(comment).length).slice(0, -2);
                     db.run(`INSERT INTO LevelComments (${keys}) VALUES (${values})`, ...Object.values(comment));
+                }
+
+                if (binaryVersion < 51) {
+                    // 2.208 or below, so replace utf8 with the ascii version
+                    for (let id of Object.keys(levels)) {
+                        levels[id] = levels[id].map(commentData => {
+                            return {
+                                ...commentData,
+                                comment: accents.remove(commentData.comment)
+                            }
+                        });
+                    }
                 }
 
                 return { levels };

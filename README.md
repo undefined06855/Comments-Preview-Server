@@ -24,6 +24,7 @@ PORT=8080 # defaults to 80
 DEVELOPMENT=true # defaults to false
 BOOMLINGS_ENDPOINT=https://www.boomlings.com/database/getGJComments21.php # defaults to boomlings
 BOOMLINGS_AUTH=whatever # optional, gets passed as the Authorization header to the endpoint
+DEFAULT_BINARY_VER=51 # the default binaryVersion to pass to boomlings, defaults to 51
 ```
 
 If you don't have a whitelisted proxy set up and you are using the vanilla boomlings.com endpoint, it is likely that you
